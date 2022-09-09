@@ -1,0 +1,120 @@
+---
+title: 'Exploring Census Data: Tidycensus'
+output:
+  html_document:
+  theme: lumen
+date: "2022-07-26"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## The United States Census Is ....
+
+### Intended to count every person in the United States, as mandated in Article 1 section 2 of the constitution. 
+
+By collecting this social, economic, and demographic information on its citizens, the U.S. Government is able to understand who America is and where America is going.
+
+The data collected from the US Census is also used to determine government spending on education to health care. As well as determine congressional districts in each state. 
+
+### Tidycensus
+
+Makes it easy to acquire and work with census data in R. It has a tidyverse-friendly design that allows users to retrieve and wrangle specific data for further analysis.
+
+This package was built by K. Walker, originally released in 2017, and re released in 2021 (K.Walker and Herman, 2021). 
+
+```{r, results='hide',message=FALSE, warning=FALSE}
+# packages
+library(tidycensus)
+library(tidyverse)
+library(DT)
+library(kableExtra)
+```
+
+#### Steps to get started
+
+Request an API key http://api.census.gov/data/key_signup.html , retrieve your API key with the email you supplied, and run the code below with your API key.
+
+Census APIs are characterized by an API endpoint, which is a base web address for a given Census dataset, and a query, which customizes the data returned from the API.
+
+
+```{r}
+# install tidycensus and load the package into your library
+##library(tidycensus)
+#   Step 2
+#census_api_key("YOUR KEY GOES HERE", install = TRUE)
+```
+
+Once you have ran this code successfully, your R environment will remember your credentials. So there is no need to run this code the next time you want to collect Census data.
+
+### Decennial dataset
+
+The U.S. census counts each resident of the country, where they live on April 1, every ten years ending in zero. The Constitution mandates the enumeration to determine how to appropriate seats in the House of Representatives among the states.
+
+You can request data from a few different types of geographies, including the Nation all the way down to census blocks. Each geography has a parent group and fold into each other. For example the Nation is made up of states, states are made up of counties all the way down to block groups, which are made up of census blocks.
+
+#### Use load_variables to get a list of avaiable data
+
+We can filter through variables by specifying the year, data set, and geography. In this exploration we will be using the PL sumfile for year 2020 from the Decennial data set. 
+
+```{r}
+load_variables(
+  year= 2020, # what year we want to get variables for
+  dataset = "pl", # the file in the data set we want to access
+  cache = FALSE # makes it faster to retrieve those variables in the future
+)
+```
+
+
+#### The variables in the "pl" sum file we will explore contain information on the institutionalized population
+
+##### Institutionalized Variables 
+
+- *P1_001N* : Total population of United States 
+- *P5_002N* : Total institutionalized population of the United States
+- *P5_003N* : Total institutionalized population in Correctional facilities
+- *P5_004N* : Total institutionalized population in Juvenile facilities
+- *P5_005N* : Total institutionalized population in Nursing facilities
+- *P5_006N* : Total institutionalized population in other institutionalized facilities
+
+
+```{r}
+institutionalized_variables <- c(institutionalized = "P5_002N", correctional = "P5_003N", juvenial = "P5_004N", nursing = "P5_005N", other="P5_006N")
+```
+   
+#### Requesting the data
+
+```{r, results='hide', warning=FALSE}
+df <- get_decennial(
+  geography = "state", # we will look at data for each state
+  variables = institutionalized_variables, # get data for all the variables we want
+  sumfile = "pl", # summary file
+  summary_var = "P1_001N", # we can use the summary variable to normalize the data
+  year = 2020, # indicate the year that we want data for
+  geometry = TRUE # this includes the geography geometry to help us visualized the data on a ma # choose if we want the data long or wide, helps shape the data
+)
+
+df_wide <- get_decennial(
+  geography = "state", # we will look at data for each state
+  variables = institutionalized_variables, # get data for all the variables we want
+  sumfile = "pl", # summary file
+  summary_var = "P1_001N", # we can use the summary variable to normalize the data
+  year = 2020, # indicate the year that we want data for
+  geometry = TRUE,# this includes the geography geometry to help us visualized the data on a ma 
+  output = "wide" # choose if we want the data long or wide, helps shape the data
+)
+```
+
+#### Check our data
+
+```{r}
+kable(df)
+```
+
+
+#### Write data to CSV
+
+
+
+
